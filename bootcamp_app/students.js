@@ -7,14 +7,20 @@ const pool = new Pool({
   database: 'bootcampx'
 });
 
+// to prevent sql injection attacks, assign input variables to constants and then put those constants in an array
+const queryString =`
+  SELECT students.id as student_id, students.name as name, cohorts.name as cohort
+  FROM students
+  JOIN cohorts ON cohorts.id = cohort_id
+  WHERE cohorts.name LIKE $1
+  LIMIT $2
+  `;
+const cohortName = process.argv[2];
+const limit = process.argv[3] || 5;
+const values = [`%${cohortName}%`, limit];
+
 //this function accepts SQL queries as strings & returns a promise with query result
-pool.query(`
-SELECT students.id as student_id, students.name as name, cohorts.name as cohort
-FROM students
-JOIN cohorts ON cohorts.id = cohort_id
-WHERE cohorts.name LIKE '%${process.argv[2]}%'
-LIMIT ${process.argv[3] || 5};
-`)
+pool.query(queryString, values)
 .then(res => {
   //the result we want are in the rows object within the larger object
   res.rows.forEach(user => {
